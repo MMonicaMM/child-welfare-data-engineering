@@ -35,39 +35,46 @@ will be collected or processed.
 
 ## SRC001
 
-**Source:** TBD
+**Source:** Deca i omladina korisnici socijalne zaštite
 
-**Organization:** TBD
+**Organization:** Republički zavod za statistiku (RZS)
 
-**URL:** TBD
+**URL:** https://data.gov.rs/sr/datasets/statistichki-godishnjak-2019-sotsijalna-zashtita/
 
-**Data type:** TBD
+**Data type:** Social protection statistics
 
-**Format:** TBD
+**Format:** XLSX
 
-**Extraction method:** TBD
+**Extraction method:** Python / HTTP download / Pandas
 
-**Relevant indicators:**
+**Relevant attributes:**
 
-- TBD
+- Grad/Opština
+- Matični broj opštine
+- Godina
+- Kategorija
+- Broj
 
 **Geographical level:**
 
-- TBD
+City / Municipality
 
 **Time period:**
 
-- TBD
+Available years in the source
 
 **Update frequency:**
 
-- TBD
+Depends on RZS publication
 
-**Notes:**
+**Purpose in project:**
 
-TBD
+Used as a structured public data source for children
+and youth receiving social protection services.
 
----
+**Status:**
+
+Selected
 
 ## SRC002
 
