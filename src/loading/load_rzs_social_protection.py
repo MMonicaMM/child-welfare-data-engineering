@@ -4,10 +4,6 @@ import sys
 from sqlalchemy import text
 
 
-# --------------------------------------------------
-# Add project root to Python path
-# --------------------------------------------------
-
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 sys.path.append(str(PROJECT_ROOT))
@@ -17,16 +13,8 @@ from src.database.connection import get_database_engine
 from src.transformation.transform_rzs_social_protection import transform
 
 
-# --------------------------------------------------
-# Configuration
-# --------------------------------------------------
-
 TARGET_TABLE = "staging.rzs_social_protection"
 
-
-# --------------------------------------------------
-# Load data
-# --------------------------------------------------
 
 def load_to_postgres(df):
 
@@ -34,21 +22,60 @@ def load_to_postgres(df):
 
     print("Loading data into PostgreSQL...")
 
-    df.to_sql(
-        name="rzs_social_protection",
-        con=engine,
-        schema="staging",
-        if_exists="append",
-        index=False,
-        method="multi",
+    with engine.begin() as connection:
+
+        for _, row in df.iterrows():
+
+            query = text(
+                """
+                INSERT INTO staging.rzs_social_protection (
+                    municipality,
+                    municipality_code,
+                    year,
+                    category,
+                    value,
+                    source_id,
+                    loaded_at
+                )
+                VALUES (
+                    :municipality,
+                    :municipality_code,
+                    :year,
+                    :category,
+                    :value,
+                    :source_id,
+                    :loaded_at
+                )
+                ON CONFLICT (
+                    source_id,
+                    municipality_code,
+                    year,
+                    category
+                )
+                DO UPDATE SET
+                    municipality = EXCLUDED.municipality,
+                    value = EXCLUDED.value,
+                    loaded_at = EXCLUDED.loaded_at;
+                """
+            )
+
+            connection.execute(
+                query,
+                {
+                    "municipality": row["municipality"],
+                    "municipality_code": row["municipality_code"],
+                    "year": row["year"],
+                    "category": row["category"],
+                    "value": row["value"],
+                    "source_id": row["source_id"],
+                    "loaded_at": row["loaded_at"],
+                },
+            )
+
+    print(
+        f"Processed {len(df)} rows."
     )
 
-    print(f"Loaded {len(df)} rows into {TARGET_TABLE}.")
-
-
-# --------------------------------------------------
-# Verify load
-# --------------------------------------------------
 
 def verify_load():
 
@@ -67,12 +94,10 @@ def verify_load():
 
         count = result.scalar()
 
-    print(f"Rows currently in {TARGET_TABLE}: {count}")
+    print(
+        f"Rows currently in {TARGET_TABLE}: {count}"
+    )
 
-
-# --------------------------------------------------
-# Main
-# --------------------------------------------------
 
 def main():
 
@@ -80,15 +105,14 @@ def main():
     print("RZS SOCIAL PROTECTION LOAD")
     print("=" * 60)
 
-    # Transform raw data
     df = transform()
 
-    print(f"\nTransformed rows: {len(df)}")
+    print(
+        f"\nTransformed rows: {len(df)}"
+    )
 
-    # Load into PostgreSQL
     load_to_postgres(df)
 
-    # Verify
     verify_load()
 
     print("\nLoad completed successfully.")
